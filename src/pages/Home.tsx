@@ -32,7 +32,7 @@ export default function Home() {
     return () => clearTimeout(timer)
   }, [])
 
-  // Track visitors
+  // Track visitors - minimalist version
   useEffect(() => {
     if (isLoading) return
     
@@ -45,25 +45,42 @@ export default function Home() {
         localStorage.setItem('axora_visitor_count', visitorCount.toString())
         sessionStorage.setItem('axora_session', 'true')
         
+        // Get stored message ID
+        const messageId = localStorage.getItem('axora_webhook_message_id')
+        
+        const embed = {
+          title: '📊 Site Analytics',
+          color: 0xfbbf24,
+          fields: [
+            { name: 'Total Visitors', value: `**${visitorCount}**`, inline: true },
+            { name: 'Last Updated', value: new Date().toLocaleTimeString(), inline: true }
+          ],
+          footer: { text: 'Axora Clients' },
+          timestamp: new Date().toISOString()
+        }
+        
         try {
-          await fetch(WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              embeds: [{
-                title: '🔥 New Site Visitor',
-                description: `Someone just visited Axora Clients!`,
-                color: 0xfbbf24,
-                fields: [
-                  { name: 'Total Visitors', value: visitorCount.toString(), inline: true },
-                  { name: 'Time', value: new Date().toLocaleString(), inline: true }
-                ],
-                footer: { text: 'Axora Visitor Tracker' }
-              }]
+          if (messageId) {
+            // Update existing message
+            await fetch(`${WEBHOOK_URL}/messages/${messageId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ embeds: [embed] })
             })
-          })
+          } else {
+            // Create new message
+            const response = await fetch(WEBHOOK_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ embeds: [embed] })
+            })
+            const data = await response.json()
+            if (data.id) {
+              localStorage.setItem('axora_webhook_message_id', data.id)
+            }
+          }
         } catch (e) {
-          console.error('Webhook failed:', e)
+          console.error('Webhook error:', e)
         }
       }
     }
@@ -91,7 +108,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden selection:bg-yellow-400/30">
-      {/* Static background gradient */}
+      {/* Background */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-yellow-400/5 rounded-full blur-[100px]" />
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-yellow-400/5 rounded-full blur-[100px]" />
@@ -117,11 +134,7 @@ export default function Home() {
               <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="text-sm text-zinc-400 hover:text-white transition-colors duration-300">Discord</a>
             </div>
 
-            {/* DOWNLOAD BUTTON - Now goes to #clients section instead of admin */}
-            <a 
-              href="#clients"
-              className="hidden md:flex px-6 py-2.5 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition-all duration-300 hover:scale-105"
-            >
+            <a href="#clients" className="hidden md:flex px-6 py-2.5 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition-all duration-300 hover:scale-105">
               Download Now
             </a>
 
@@ -135,7 +148,6 @@ export default function Home() {
               <button onClick={() => { navigate('/features'); setIsMenuOpen(false) }} className="block text-sm text-zinc-400 hover:text-white w-full text-left">Features</button>
               <a href="#clients" onClick={() => setIsMenuOpen(false)} className="block text-sm text-zinc-400 hover:text-white">Download</a>
               <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)} className="block text-sm text-zinc-400 hover:text-white">Discord</a>
-              {/* Mobile download button also goes to clients */}
               <a href="#clients" onClick={() => setIsMenuOpen(false)} className="block w-full px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg text-center">Download Now</a>
             </div>
           )}
@@ -145,7 +157,6 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-20 px-6">
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          {/* Version Badge */}
           <div className={`transition-all duration-700 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400/10 border border-yellow-400/20 rounded-full mb-8">
               <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
@@ -153,7 +164,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Main Title */}
           <div className={`transition-all duration-700 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <h1 className="text-6xl md:text-8xl font-bold mb-6 tracking-tight">
               <span className="text-white">Axora</span>{' '}
@@ -161,14 +171,12 @@ export default function Home() {
             </h1>
           </div>
 
-          {/* Subtitle */}
           <div className={`transition-all duration-700 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <p className="text-xl md:text-2xl text-zinc-400 font-medium mb-8">
               Free Minecraft Utility Mods
             </p>
           </div>
 
-          {/* Description */}
           <div className={`transition-all duration-700 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <p className="text-zinc-500 max-w-2xl mx-auto mb-12 leading-relaxed">
               Axora Clients is a collection of premium Minecraft clients packed with over 100+ modules 
@@ -176,29 +184,19 @@ export default function Home() {
             </p>
           </div>
 
-          {/* CTA Buttons - Download goes to #clients */}
           <div className={`transition-all duration-700 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-              <a 
-                href="#clients" 
-                className="group flex items-center gap-2 px-8 py-4 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-300 transition-all duration-300 hover:scale-105"
-              >
+              <a href="#clients" className="group flex items-center gap-2 px-8 py-4 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-300 transition-all duration-300 hover:scale-105">
                 Download for 1.8+
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a 
-                href="https://discord.gg/axoras" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-8 py-4 bg-zinc-800/50 text-white font-semibold rounded-lg border border-zinc-700 hover:bg-zinc-800 transition-all duration-300"
-              >
+              <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-8 py-4 bg-zinc-800/50 text-white font-semibold rounded-lg border border-zinc-700 hover:bg-zinc-800 transition-all duration-300">
                 <Users className="w-5 h-5" />
                 Join Community
               </a>
             </div>
           </div>
 
-          {/* Feature Cards */}
           <div className={`transition-all duration-700 delay-600 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
               <div className="group p-6 bg-zinc-900/50 border border-zinc-800 rounded-xl hover:border-yellow-400/30 transition-all duration-300 hover:-translate-y-1">
@@ -242,7 +240,6 @@ export default function Home() {
                   key={client.id}
                   onClick={() => navigate(`/client/${client.id}`)}
                   className="group cursor-pointer bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800 hover:border-yellow-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-yellow-400/5 hover:-translate-y-1"
-                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${client.iconColor} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                     <Download className="w-7 h-7 text-white" />
@@ -284,11 +281,8 @@ export default function Home() {
               { icon: Shield, title: 'Undetectable', desc: 'Advanced bypass systems', color: 'text-green-400' },
               { icon: Code, title: 'Customizable', desc: 'Extensive config options', color: 'text-blue-400' },
               { icon: Lock, title: 'Secure', desc: 'No data collection', color: 'text-purple-400' },
-            ].map((feature, index) => (
-              <div 
-                key={feature.title} 
-                className="group p-8 bg-zinc-900/30 rounded-2xl border border-zinc-800 hover:border-yellow-400/30 transition-all duration-300 hover:-translate-y-1"
-              >
+            ].map((feature) => (
+              <div key={feature.title} className="group p-8 bg-zinc-900/30 rounded-2xl border border-zinc-800 hover:border-yellow-400/30 transition-all duration-300 hover:-translate-y-1">
                 <div className="w-14 h-14 mb-6 rounded-xl bg-zinc-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <feature.icon className={`w-7 h-7 ${feature.color}`} />
                 </div>
@@ -310,19 +304,11 @@ export default function Home() {
               Join thousands of players using Axora clients to gain the competitive edge.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a 
-                href="https://discord.gg/axoras" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="px-8 py-4 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-300 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
-              >
+              <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="px-8 py-4 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-300 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2">
                 <Sparkles className="w-5 h-5" />
                 Join Discord
               </a>
-              <a 
-                href="#clients" 
-                className="px-8 py-4 bg-zinc-800 text-white font-semibold rounded-lg border border-zinc-700 hover:bg-zinc-700 transition-all duration-300"
-              >
+              <a href="#clients" className="px-8 py-4 bg-zinc-800 text-white font-semibold rounded-lg border border-zinc-700 hover:bg-zinc-700 transition-all duration-300">
                 View Clients
               </a>
             </div>
