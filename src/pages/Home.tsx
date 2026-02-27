@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Shield, Zap, Settings, Swords, Download, ChevronRight, Menu, X } from 'lucide-react'
+import { Shield, Zap, Settings, Swords, Download, ChevronRight, Menu, X, Sparkles } from 'lucide-react'
 
 interface Client {
   id: string
@@ -11,11 +11,13 @@ interface Client {
   status: string
   statusColor: string
   iconColor: string
+  fileName?: string
 }
 
 export default function Home() {
   const [clients, setClients] = useState<Client[]>([])
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [hoveredClient, setHoveredClient] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -26,75 +28,93 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-slate-700">
+    <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-slate-950 to-slate-950 pointer-events-none" />
+      
+      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div onClick={() => navigate('/')} className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent cursor-pointer">
-              AXORA
+            <div onClick={() => navigate('/')} className="flex items-center gap-2 text-2xl font-bold cursor-pointer group">
+              <Sparkles className="w-8 h-8 text-indigo-400 group-hover:rotate-12 transition-transform" />
+              <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">AXORA</span>
             </div>
             <div className="hidden md:flex items-center gap-8">
-              <a href="#clients" className="text-sm font-medium hover:text-indigo-400 transition-colors">Clients</a>
-              <button onClick={() => navigate('/features')} className="text-sm font-medium hover:text-indigo-400 transition-colors">Features</button>
-              <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="text-sm font-medium hover:text-indigo-400 transition-colors">Discord</a>
-              <button onClick={() => navigate('/admin')} className="px-4 py-2 bg-white text-slate-900 rounded-lg text-sm font-medium hover:scale-105 transition-transform">Admin</button>
+              <a href="#clients" className="text-sm font-medium text-slate-300 hover:text-white transition-colors relative group">
+                Clients
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-400 group-hover:w-full transition-all" />
+              </a>
+              <button onClick={() => navigate('/features')} className="text-sm font-medium text-slate-300 hover:text-white transition-colors relative group">
+                Features
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-400 group-hover:w-full transition-all" />
+              </button>
+              <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-slate-300 hover:text-white transition-colors relative group">
+                Discord
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-400 group-hover:w-full transition-all" />
+              </a>
+              <button onClick={() => navigate('/admin')} className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-indigo-500/25 transition-all hover:scale-105">
+                Admin
+              </button>
             </div>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 hover:bg-white/5 rounded-lg transition-colors">
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
           {isMenuOpen && (
-            <div className="md:hidden py-4 space-y-4">
-              <a href="#clients" onClick={() => setIsMenuOpen(false)} className="block text-sm font-medium">Clients</a>
-              <button onClick={() => { navigate('/features'); setIsMenuOpen(false) }} className="block text-sm font-medium w-full text-left">Features</button>
-              <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)} className="block text-sm font-medium">Discord</a>
-              <button onClick={() => { navigate('/admin'); setIsMenuOpen(false) }} className="block text-sm font-medium w-full text-left">Admin</button>
+            <div className="md:hidden py-4 space-y-4 border-t border-white/5 mt-4">
+              <a href="#clients" onClick={() => setIsMenuOpen(false)} className="block text-sm font-medium text-slate-300 hover:text-white">Clients</a>
+              <button onClick={() => { navigate('/features'); setIsMenuOpen(false) }} className="block text-sm font-medium text-slate-300 hover:text-white w-full text-left">Features</button>
+              <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)} className="block text-sm font-medium text-slate-300 hover:text-white">Discord</a>
+              <button onClick={() => { navigate('/admin'); setIsMenuOpen(false) }} className="block text-sm font-medium text-slate-300 hover:text-white w-full text-left">Admin</button>
             </div>
           )}
         </div>
       </nav>
 
-      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-        </div>
+      <section className="relative pt-32 pb-20 px-6 min-h-screen flex items-center">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        
         <div className="max-w-7xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm rounded-full border border-slate-700 mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-sm rounded-full border border-white/10 mb-8 hover:border-indigo-500/50 transition-colors cursor-default">
             <Shield className="w-4 h-4 text-indigo-400" />
-            <span className="text-sm font-medium">Premium Minecraft Clients</span>
+            <span className="text-sm font-medium text-slate-300">Premium Minecraft Clients</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-            Elevate Your{' '}
-            <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-              Gameplay
-            </span>
+          
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight">
+            <span className="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Elevate Your</span>
+            <br />
+            <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Gameplay</span>
           </h1>
-          <p className="text-xl text-slate-400 mb-8 max-w-2xl mx-auto">
-            Professional-grade Minecraft clients with unmatched performance and customization. No Discord required.
+          
+          <p className="text-lg md:text-xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+            Professional-grade Minecraft clients with unmatched performance and customization. 
+            <span className="text-white font-medium"> No Discord required.</span>
           </p>
+          
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="#clients" className="group px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-2xl hover:shadow-indigo-500/25 transition-all hover:scale-105 flex items-center gap-2">
               Browse Clients
               <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </a>
-            <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="px-8 py-4 border-2 border-slate-700 rounded-xl font-semibold hover:border-indigo-500 hover:text-indigo-400 transition-all">
+            <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="px-8 py-4 bg-white/5 border border-white/10 rounded-xl font-semibold hover:bg-white/10 hover:border-indigo-500/50 transition-all">
               Join Discord
             </a>
           </div>
         </div>
       </section>
 
-      <section id="clients" className="py-20 px-6">
+      <section id="clients" className="py-20 px-6 relative">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Our Clients</h2>
-            <p className="text-slate-400">Professional tools for serious players</p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Our Clients</h2>
+            <p className="text-slate-400 text-lg">Professional tools for serious players</p>
           </div>
           
           {clients.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-slate-500 text-lg">No clients available yet. Check the Admin panel to add clients.</p>
+            <div className="text-center py-20 px-6 bg-white/5 rounded-2xl border border-white/10">
+              <Download className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-400 text-lg mb-2">No clients available yet</p>
+              <p className="text-slate-500 text-sm">Check the Admin panel to add clients</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -102,22 +122,31 @@ export default function Home() {
                 <div
                   key={client.id}
                   onClick={() => navigate(`/client/${client.id}`)}
-                  className="group cursor-pointer bg-slate-800 rounded-2xl p-6 border border-slate-700 hover:border-indigo-500/50 transition-all hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2"
+                  onMouseEnter={() => setHoveredClient(client.id)}
+                  onMouseLeave={() => setHoveredClient(null)}
+                  className="group cursor-pointer bg-white/5 rounded-2xl p-6 border border-white/10 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 relative overflow-hidden"
                 >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${client.iconColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                    <Download className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-xl font-bold">{client.name}</h3>
-                    <span className={`px-2 py-1 text-xs rounded-full ${client.statusColor}`}>
-                      {client.status}
-                    </span>
-                  </div>
-                  <p className="text-slate-400 text-sm mb-4">{client.tagline}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-500">{client.version}</span>
-                    <div className="flex items-center gap-1 text-indigo-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                      View Details <ChevronRight className="w-4 h-4" />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${client.iconColor} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                  
+                  <div className="relative z-10">
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${client.iconColor} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                      <Download className="w-7 h-7 text-white" />
+                    </div>
+                    
+                    <div className="flex items-center gap-3 mb-3">
+                      <h3 className="text-xl font-bold text-white group-hover:text-indigo-300 transition-colors">{client.name}</h3>
+                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${client.statusColor}`}>
+                        {client.status}
+                      </span>
+                    </div>
+                    
+                    <p className="text-slate-400 text-sm mb-4 line-clamp-2">{client.tagline}</p>
+                    
+                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                      <span className="text-xs text-slate-500 font-mono">{client.version}</span>
+                      <div className="flex items-center gap-1 text-indigo-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+                        View Details <ChevronRight className="w-4 h-4" />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -127,66 +156,57 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-20 px-6 bg-slate-800/30">
+      <section className="py-20 px-6 bg-white/5 border-y border-white/5">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Why Choose Axora</h2>
-            <p className="text-slate-400">Built for performance, designed for victory</p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Why Choose Axora</h2>
+            <p className="text-slate-400 text-lg">Built for performance, designed for victory</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center group">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Zap className="w-8 h-8 text-white" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: Zap, title: 'Performance', desc: 'Maximum FPS with zero lag' },
+              { icon: Shield, title: 'Undetectable', desc: 'Advanced bypass systems' },
+              { icon: Settings, title: 'Customizable', desc: 'Extensive config options' },
+              { icon: Swords, title: 'PvP Optimized', desc: 'Competitive advantage' },
+            ].map((feature, index) => (
+              <div key={feature.title} className="group p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-indigo-500/30 transition-all duration-300 hover:-translate-y-1">
+                <div className="w-14 h-14 mb-5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center group-hover:from-indigo-500 group-hover:to-purple-500 transition-all duration-300">
+                  <feature.icon className="w-7 h-7 text-indigo-400 group-hover:text-white transition-colors" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-white group-hover:text-indigo-300 transition-colors">{feature.title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">{feature.desc}</p>
               </div>
-              <h3 className="text-xl font-bold mb-2">Performance</h3>
-              <p className="text-slate-400 text-sm">Optimized for maximum FPS and minimal latency</p>
-            </div>
-            <div className="text-center group">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Undetectable</h3>
-              <p className="text-slate-400 text-sm">Advanced bypass systems for all servers</p>
-            </div>
-            <div className="text-center group">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Settings className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Customizable</h3>
-              <p className="text-slate-400 text-sm">Extensive configuration options</p>
-            </div>
-            <div className="text-center group">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Swords className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">PvP Optimized</h3>
-              <p className="text-slate-400 text-sm">Built for competitive gameplay</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Dominate?</h2>
-          <p className="text-indigo-100 mb-8 text-lg">Join thousands of players using Axora clients</p>
-          <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold hover:shadow-2xl transition-all hover:scale-105">
-            Join Discord <ChevronRight className="w-5 h-5" />
-          </a>
+        <div className="max-w-4xl mx-auto text-center bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-3xl p-12 border border-indigo-500/20 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 opacity-10" />
+          <div className="relative z-10">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Ready to Dominate?</h2>
+            <p className="text-slate-300 mb-8 text-lg">Join thousands of players using Axora clients</p>
+            <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold hover:shadow-2xl transition-all hover:scale-105">
+              Join Discord <ChevronRight className="w-5 h-5" />
+            </a>
+          </div>
         </div>
       </section>
 
-      <footer className="border-t border-slate-700 py-12 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-            AXORA
+      <footer className="border-t border-white/5 py-12 px-6 bg-slate-950">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2 text-2xl font-bold">
+            <Sparkles className="w-6 h-6 text-indigo-400" />
+            <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">AXORA</span>
           </div>
-          <div className="flex items-center gap-6 text-sm text-slate-400">
+          <div className="flex items-center gap-8 text-sm text-slate-400">
             <button onClick={() => navigate('/')} className="hover:text-white transition-colors">Home</button>
             <button onClick={() => navigate('/features')} className="hover:text-white transition-colors">Features</button>
             <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Discord</a>
           </div>
-          <p className="text-sm text-slate-500">© 2024 Axora. All rights reserved.</p>
+          <p className="text-sm text-slate-600">© 2024 Axora. All rights reserved.</p>
         </div>
       </footer>
     </div>
