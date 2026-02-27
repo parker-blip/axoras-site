@@ -27,7 +27,6 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false)
-      // Trigger animations after loading
       setTimeout(() => setIsVisible(true), 100)
     }, 1200)
     return () => clearTimeout(timer)
@@ -92,7 +91,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden selection:bg-yellow-400/30">
-      {/* Static background gradient - no animations that cause lag */}
+      {/* Static background gradient */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-yellow-400/5 rounded-full blur-[100px]" />
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-yellow-400/5 rounded-full blur-[100px]" />
@@ -118,12 +117,13 @@ export default function Home() {
               <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="text-sm text-zinc-400 hover:text-white transition-colors duration-300">Discord</a>
             </div>
 
-            <button 
-              onClick={() => navigate('/admin')} 
+            {/* DOWNLOAD BUTTON - Now goes to #clients section instead of admin */}
+            <a 
+              href="#clients"
               className="hidden md:flex px-6 py-2.5 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition-all duration-300 hover:scale-105"
             >
               Download Now
-            </button>
+            </a>
 
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 text-white">
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -135,7 +135,8 @@ export default function Home() {
               <button onClick={() => { navigate('/features'); setIsMenuOpen(false) }} className="block text-sm text-zinc-400 hover:text-white w-full text-left">Features</button>
               <a href="#clients" onClick={() => setIsMenuOpen(false)} className="block text-sm text-zinc-400 hover:text-white">Download</a>
               <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)} className="block text-sm text-zinc-400 hover:text-white">Discord</a>
-              <button onClick={() => { navigate('/admin'); setIsMenuOpen(false) }} className="block w-full px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg text-center">Download Now</button>
+              {/* Mobile download button also goes to clients */}
+              <a href="#clients" onClick={() => setIsMenuOpen(false)} className="block w-full px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg text-center">Download Now</a>
             </div>
           )}
         </div>
@@ -175,12 +176,12 @@ export default function Home() {
             </p>
           </div>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons - Download goes to #clients */}
           <div className={`transition-all duration-700 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
               <a 
                 href="#clients" 
-                className="group flex items-center gap-2 px-8 py-4 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-300 transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                className="group flex items-center gap-2 px-8 py-4 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-300 transition-all duration-300 hover:scale-105"
               >
                 Download for 1.8+
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
