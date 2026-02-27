@@ -14,11 +14,51 @@ interface Client {
   fileName?: string
 }
 
+const WEBHOOK_URL = 'https://discord.com/api/webhooks/1476795038766858330/Zx90XU-8ltMx-eUdVI18dKvv9ShVvveYVWvvVA_s77HEyGSr_KUEFn5LP_uVf8BDwczm'
+
 export default function Home() {
   const [clients, setClients] = useState<Client[]>([])
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [hoveredClient, setHoveredClient] = useState<string | null>(null)
   const navigate = useNavigate()
+
+  // Track visitors and send to Discord
+  useEffect(() => {
+    const trackVisitor = async () => {
+      // Get or create visitor count
+      let visitorCount = parseInt(localStorage.getItem('axora_visitor_count') || '0')
+      const hasVisited = sessionStorage.getItem('axora_session')
+      
+      if (!hasVisited) {
+        visitorCount += 1
+        localStorage.setItem('axora_visitor_count', visitorCount.toString())
+        sessionStorage.setItem('axora_session', 'true')
+        
+        // Send to Discord webhook
+        try {
+          await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              embeds: [{
+                title: '🔥 New Site Visitor',
+                description: `Someone just visited Axora Clients!`,
+                color: 0x6366f1,
+                fields: [
+                  { name: 'Total Visitors', value: visitorCount.toString(), inline: true },
+                  { name: 'Time', value: new Date().toLocaleString(), inline: true }
+                ],
+                footer: { text: 'Axora Visitor Tracker' }
+              }]
+            })
+          })
+        } catch (e) {
+          console.error('Webhook failed:', e)
+        }
+      }
+    }
+    
+    trackVisitor()
+  }, [])
 
   useEffect(() => {
     const savedClients = localStorage.getItem('axora_clients')
@@ -51,9 +91,7 @@ export default function Home() {
                 Discord
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-400 group-hover:w-full transition-all" />
               </a>
-              <button onClick={() => navigate('/admin')} className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-indigo-500/25 transition-all hover:scale-105">
-                Admin
-              </button>
+              {/* NO ADMIN LINK - hidden from main page */}
             </div>
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 hover:bg-white/5 rounded-lg transition-colors">
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -64,7 +102,7 @@ export default function Home() {
               <a href="#clients" onClick={() => setIsMenuOpen(false)} className="block text-sm font-medium text-slate-300 hover:text-white">Clients</a>
               <button onClick={() => { navigate('/features'); setIsMenuOpen(false) }} className="block text-sm font-medium text-slate-300 hover:text-white w-full text-left">Features</button>
               <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)} className="block text-sm font-medium text-slate-300 hover:text-white">Discord</a>
-              <button onClick={() => { navigate('/admin'); setIsMenuOpen(false) }} className="block text-sm font-medium text-slate-300 hover:text-white w-full text-left">Admin</button>
+              {/* NO ADMIN LINK in mobile menu either */}
             </div>
           )}
         </div>
@@ -114,7 +152,7 @@ export default function Home() {
             <div className="text-center py-20 px-6 bg-white/5 rounded-2xl border border-white/10">
               <Download className="w-16 h-16 text-slate-600 mx-auto mb-4" />
               <p className="text-slate-400 text-lg mb-2">No clients available yet</p>
-              <p className="text-slate-500 text-sm">Check the Admin panel to add clients</p>
+              <p className="text-slate-500 text-sm">Check back soon!</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -122,8 +160,6 @@ export default function Home() {
                 <div
                   key={client.id}
                   onClick={() => navigate(`/client/${client.id}`)}
-                  onMouseEnter={() => setHoveredClient(client.id)}
-                  onMouseLeave={() => setHoveredClient(null)}
                   className="group cursor-pointer bg-white/5 rounded-2xl p-6 border border-white/10 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 relative overflow-hidden"
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${client.iconColor} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
@@ -169,7 +205,7 @@ export default function Home() {
               { icon: Shield, title: 'Undetectable', desc: 'Advanced bypass systems' },
               { icon: Settings, title: 'Customizable', desc: 'Extensive config options' },
               { icon: Swords, title: 'PvP Optimized', desc: 'Competitive advantage' },
-            ].map((feature, index) => (
+            ].map((feature) => (
               <div key={feature.title} className="group p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-indigo-500/30 transition-all duration-300 hover:-translate-y-1">
                 <div className="w-14 h-14 mb-5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center group-hover:from-indigo-500 group-hover:to-purple-500 transition-all duration-300">
                   <feature.icon className="w-7 h-7 text-indigo-400 group-hover:text-white transition-colors" />
