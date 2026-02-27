@@ -98,7 +98,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {clients.map((client, index) => (
+              {clients.map((client) => (
                 <div
                   key={client.id}
                   onClick={() => navigate(`/client/${client.id}`)}
@@ -108,4 +108,87 @@ export default function Home() {
                     <Download className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-xl font-bold">{client.name
+                    <h3 className="text-xl font-bold">{client.name}</h3>
+                    <span className={`px-2 py-1 text-xs rounded-full ${client.statusColor}`}>
+                      {client.status}
+                    </span>
+                  </div>
+                  <p className="text-slate-400 text-sm mb-4">{client.tagline}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-500">{client.version}</span>
+                    <div className="flex items-center gap-1 text-indigo-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                      View Details <ChevronRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="py-20 px-6 bg-slate-800/30">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Why Choose Axora</h2>
+            <p className="text-slate-400">Built for performance, designed for victory</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center group">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Zap className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Performance</h3>
+              <p className="text-slate-400 text-sm">Optimized for maximum FPS and minimal latency</p>
+            </div>
+            <div className="text-center group">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Shield className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Undetectable</h3>
+              <p className="text-slate-400 text-sm">Advanced bypass systems for all servers</p>
+            </div>
+            <div className="text-center group">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Settings className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Customizable</h3>
+              <p className="text-slate-400 text-sm">Extensive configuration options</p>
+            </div>
+            <div className="text-center group">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Swords className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">PvP Optimized</h3>
+              <p className="text-slate-400 text-sm">Built for competitive gameplay</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 px-6">
+        <div className="max-w-4xl mx-auto text-center bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Dominate?</h2>
+          <p className="text-indigo-100 mb-8 text-lg">Join thousands of players using Axora clients</p>
+          <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold hover:shadow-2xl transition-all hover:scale-105">
+            Join Discord <ChevronRight className="w-5 h-5" />
+          </a>
+        </div>
+      </section>
+
+      <footer className="border-t border-slate-700 py-12 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+            AXORA
+          </div>
+          <div className="flex items-center gap-6 text-sm text-slate-400">
+            <button onClick={() => navigate('/')} className="hover:text-white transition-colors">Home</button>
+            <button onClick={() => navigate('/features')} className="hover:text-white transition-colors">Features</button>
+            <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Discord</a>
+          </div>
+          <p className="text-sm text-slate-500">© 2024 Axora. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  )
+}
