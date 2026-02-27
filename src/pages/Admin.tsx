@@ -16,12 +16,6 @@ interface Client {
   fileSize?: number
 }
 
-const ALLOWED_IPS = ['127.0.0.1', '::1']
-
-const Particle = ({ style }: { style: React.CSSProperties }) => (
-  <div className="absolute w-1 h-1 bg-yellow-400/20 rounded-full animate-pulse" style={style} />
-)
-
 export default function Admin() {
   const navigate = useNavigate()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -29,8 +23,6 @@ export default function Admin() {
   const [showPassword, setShowPassword] = useState(false)
   const [clients, setClients] = useState<Client[]>([])
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [userIP, setUserIP] = useState<string>('')
-  const [isAuthorizedIP, setIsAuthorizedIP] = useState(true)
   const [newClient, setNewClient] = useState({
     name: '',
     tagline: '',
@@ -38,28 +30,6 @@ export default function Admin() {
     version: '',
     status: 'Available',
   })
-
-  const particles = Array.from({ length: 15 }, (_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    animationDelay: `${Math.random() * 5}s`,
-    animationDuration: `${3 + Math.random() * 4}s`
-  }))
-
-  useEffect(() => {
-    const checkIP = async () => {
-      try {
-        const response = await fetch('https://api.ipify.org?format=json')
-        const data = await response.json()
-        setUserIP(data.ip)
-        setIsAuthorizedIP(true)
-      } catch (e) {
-        setIsAuthorizedIP(true)
-      }
-    }
-    checkIP()
-  }, [])
 
   useEffect(() => {
     const savedClients = localStorage.getItem('axora_clients')
@@ -70,10 +40,8 @@ export default function Admin() {
 
   const handleLogin = () => {
     const correctPassword = atob('UEBya2VyRDN2aXNzZXIyMDEx')
-    if (password === correctPassword && isAuthorizedIP) {
+    if (password === correctPassword) {
       setIsAuthenticated(true)
-    } else if (!isAuthorizedIP) {
-      alert('Access denied: Unauthorized IP address')
     } else {
       alert('Wrong password')
       setPassword('')
@@ -151,24 +119,13 @@ export default function Admin() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6 relative">
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          {particles.map((p) => (
-            <Particle key={p.id} style={{
-              left: p.left,
-              top: p.top,
-              animationDelay: p.animationDelay,
-              animationDuration: p.animationDuration
-            }} />
-          ))}
-        </div>
-        
-        <div className="w-full max-w-md bg-zinc-900/80 p-8 rounded-2xl border border-zinc-800 backdrop-blur-sm relative z-10">
-          <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl mb-6 mx-auto shadow-lg shadow-yellow-400/20">
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-zinc-900/80 p-8 rounded-2xl border border-zinc-800 backdrop-blur-sm">
+          <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl mb-6 mx-auto shadow-lg">
             <Lock className="w-8 h-8 text-black" />
           </div>
           <h1 className="text-2xl font-bold text-center mb-2 text-white">Admin Access</h1>
-          <p className="text-zinc-500 text-center mb-6 text-sm">Restricted Area - IP: {userIP || 'Loading...'}</p>
+          <p className="text-zinc-500 text-center mb-6 text-sm">Enter password to manage clients</p>
           
           <div className="relative">
             <input
@@ -176,7 +133,7 @@ export default function Admin() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password"
-              className="w-full px-4 py-3 pr-12 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-600 focus:border-yellow-400 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 pr-12 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-500 focus:border-yellow-400 focus:outline-none transition-colors"
               onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
             />
             <button
@@ -189,13 +146,13 @@ export default function Admin() {
           
           <button
             onClick={handleLogin}
-            className="w-full mt-4 py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 transition-all flex items-center justify-center gap-2 shadow-lg shadow-yellow-400/20"
+            className="w-full mt-4 py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 transition-all flex items-center justify-center gap-2"
           >
             <Shield className="w-5 h-5" /> Unlock
           </button>
           
           <p className="text-xs text-zinc-600 text-center mt-4">
-            This page is hidden from the main site.
+            Access hidden page at /admin
           </p>
         </div>
       </div>
@@ -203,19 +160,8 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-6 relative">
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {particles.map((p) => (
-          <Particle key={p.id} style={{
-            left: p.left,
-            top: p.top,
-            animationDelay: p.animationDelay,
-            animationDuration: p.animationDuration
-          }} />
-        ))}
-      </div>
-
-      <div className="max-w-6xl mx-auto relative z-10">
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-6">
+      <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div onClick={() => navigate('/')} className="flex items-center gap-2 text-2xl font-bold cursor-pointer">
@@ -228,15 +174,14 @@ export default function Admin() {
               </div>
             </div>
             <span className="text-zinc-700">/</span>
-            <h1 className="text-2xl font-bold text-white">Admin</h1>
-            <span className="px-2 py-1 bg-yellow-400/10 text-yellow-400 text-xs rounded border border-yellow-400/20">IP: {userIP}</span>
+            <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
           </div>
           <button onClick={() => navigate('/')} className="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors text-sm border border-zinc-700">
             Back to Site
           </button>
         </div>
 
-        <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800 mb-8 backdrop-blur-sm">
+        <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800 mb-8">
           <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-white">
             <Plus className="w-5 h-5 text-yellow-400" /> Add New Client
           </h2>
@@ -247,31 +192,31 @@ export default function Admin() {
               placeholder="Client Name *"
               value={newClient.name}
               onChange={(e) => setNewClient({...newClient, name: e.target.value})}
-              className="px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-600 focus:border-yellow-400 focus:outline-none transition-colors"
+              className="px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-500 focus:border-yellow-400 focus:outline-none"
             />
             <input
               type="text"
               placeholder="Version (e.g., v1.0.0)"
               value={newClient.version}
               onChange={(e) => setNewClient({...newClient, version: e.target.value})}
-              className="px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-600 focus:border-yellow-400 focus:outline-none transition-colors"
+              className="px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-500 focus:border-yellow-400 focus:outline-none"
             />
             <input
               type="text"
               placeholder="Tagline *"
               value={newClient.tagline}
               onChange={(e) => setNewClient({...newClient, tagline: e.target.value})}
-              className="px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-600 focus:border-yellow-400 focus:outline-none transition-colors md:col-span-2"
+              className="px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-500 focus:border-yellow-400 focus:outline-none md:col-span-2"
             />
             <textarea
               placeholder="Description"
               value={newClient.description}
               onChange={(e) => setNewClient({...newClient, description: e.target.value})}
-              className="px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-600 focus:border-yellow-400 focus:outline-none transition-colors md:col-span-2 h-24 resize-none"
+              className="px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-500 focus:border-yellow-400 focus:outline-none md:col-span-2 h-24 resize-none"
             />
             
             <div className="md:col-span-2">
-              <label className="block text-sm text-zinc-500 mb-2">Client File (Max 5MB)</label>
+              <label className="block text-sm text-zinc-400 mb-2">Client File (Max 5MB)</label>
               <div className="flex items-center gap-4">
                 <label className="flex-1 cursor-pointer">
                   <input
@@ -297,7 +242,7 @@ export default function Admin() {
                 )}
               </div>
               {selectedFile && (
-                <p className="text-xs text-zinc-600 mt-1">
+                <p className="text-xs text-zinc-500 mt-1">
                   Size: {formatFileSize(selectedFile.size)}
                 </p>
               )}
@@ -306,13 +251,13 @@ export default function Admin() {
           
           <button
             onClick={addClient}
-            className="mt-6 flex items-center gap-2 px-6 py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/20"
+            className="mt-6 flex items-center gap-2 px-6 py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 transition-all"
           >
             <Upload className="w-5 h-5" /> Add Client
           </button>
         </div>
 
-        <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 overflow-hidden backdrop-blur-sm">
+        <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 overflow-hidden">
           <div className="p-6 border-b border-zinc-800">
             <h2 className="text-xl font-bold text-white">Manage Clients ({clients.length})</h2>
           </div>
@@ -327,9 +272,9 @@ export default function Admin() {
                 <div key={client.id} className="p-6 flex items-center justify-between hover:bg-zinc-800/30 transition-colors">
                   <div>
                     <h3 className="font-bold text-lg text-white">{client.name}</h3>
-                    <p className="text-sm text-zinc-500">{client.tagline}</p>
+                    <p className="text-sm text-zinc-400">{client.tagline}</p>
                     <div className="flex items-center gap-4 mt-2 text-xs">
-                      <span className="text-zinc-600">{client.version}</span>
+                      <span className="text-zinc-500">{client.version}</span>
                       {client.fileName && (
                         <span className="flex items-center gap-1 text-yellow-400">
                           <Download className="w-3 h-3" /> {client.fileName} ({formatFileSize(client.fileSize || 0)})
