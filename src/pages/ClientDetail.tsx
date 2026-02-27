@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Download, Shield, Zap, Settings, Sparkles } from 'lucide-react'
+import { ArrowLeft, Download, Shield, Zap, Settings, Sparkles, ChevronRight } from 'lucide-react'
 
 interface Client {
   id: string
@@ -15,10 +15,23 @@ interface Client {
   fileName?: string
 }
 
+const Particle = ({ style }: { style: React.CSSProperties }) => (
+  <div className="absolute w-1 h-1 bg-yellow-400/30 rounded-full animate-pulse" style={style} />
+)
+
 export default function ClientDetail() {
   const { clientId } = useParams()
   const navigate = useNavigate()
   const [client, setClient] = useState<Client | null>(null)
+  const [isVisible, setIsVisible] = useState(false)
+
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    animationDelay: `${Math.random() * 5}s`,
+    animationDuration: `${3 + Math.random() * 4}s`
+  }))
 
   useEffect(() => {
     const savedClients = localStorage.getItem('axora_clients')
@@ -27,6 +40,7 @@ export default function ClientDetail() {
       const found = clients.find((c: Client) => c.id === clientId)
       setClient(found || null)
     }
+    setTimeout(() => setIsVisible(true), 100)
   }, [clientId])
 
   const handleDownload = () => {
@@ -42,10 +56,10 @@ export default function ClientDetail() {
 
   if (!client) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Client Not Found</h1>
-          <button onClick={() => navigate('/')} className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg">
+          <button onClick={() => navigate('/')} className="px-6 py-3 bg-yellow-400 text-black font-bold rounded-lg">
             Go Home
           </button>
         </div>
@@ -54,20 +68,34 @@ export default function ClientDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-slate-950 to-slate-950 pointer-events-none" />
-      
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-white/5">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {particles.map((p) => (
+          <Particle key={p.id} style={{
+            left: p.left,
+            top: p.top,
+            animationDelay: p.animationDelay,
+            animationDuration: p.animationDuration
+          }} />
+        ))}
+      </div>
+
+      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[#0a0a0a]/80 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div onClick={() => navigate('/')} className="flex items-center gap-2 text-2xl font-bold cursor-pointer group">
-              <Sparkles className="w-8 h-8 text-indigo-400 group-hover:rotate-12 transition-transform" />
-              <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">AXORA</span>
+            <div onClick={() => navigate('/')} className="flex items-center gap-3 cursor-pointer group">
+              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center transform group-hover:scale-110 transition-transform">
+                <span className="text-black font-bold text-xl">Ax</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-white font-bold text-lg leading-tight">Axora</span>
+                <span className="text-yellow-400 text-xs tracking-widest">CLIENTS</span>
+              </div>
             </div>
             <div className="hidden md:flex items-center gap-8">
-              <button onClick={() => navigate('/')} className="text-sm font-medium text-slate-300 hover:text-white">Home</button>
-              <button onClick={() => navigate('/features')} className="text-sm font-medium text-slate-300 hover:text-white">Features</button>
-              <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-slate-300 hover:text-white">Discord</a>
+              <button onClick={() => navigate('/')} className="text-sm text-zinc-400 hover:text-white transition-colors">Home</button>
+              <button onClick={() => navigate('/features')} className="text-sm text-zinc-400 hover:text-white transition-colors">Features</button>
+              <a href="https://discord.gg/axoras" target="_blank" rel="noopener noreferrer" className="text-sm text-zinc-400 hover:text-white transition-colors">Discord</a>
             </div>
           </div>
         </div>
@@ -75,13 +103,16 @@ export default function ClientDetail() {
 
       <main className="pt-32 pb-20 px-6 relative">
         <div className="max-w-4xl mx-auto">
-          <button onClick={() => navigate('/')} className="flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors group">
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Back to Clients
+          <button 
+            onClick={() => navigate('/')} 
+            className={`flex items-center gap-2 text-zinc-500 hover:text-white mb-8 transition-all duration-500 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}
+          >
+            <ArrowLeft className="w-5 h-5" /> Back to Clients
           </button>
 
-          <div className="bg-white/5 rounded-3xl p-8 md:p-12 border border-white/10">
+          <div className={`bg-zinc-900/50 rounded-3xl p-8 md:p-12 border border-zinc-800 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8">
-              <div className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${client.iconColor} flex items-center justify-center shadow-2xl`}>
+              <div className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${client.iconColor} flex items-center justify-center shadow-2xl shadow-yellow-400/20 transform hover:scale-105 transition-transform duration-300`}>
                 <Download className="w-12 h-12 text-white" />
               </div>
               <div>
@@ -91,31 +122,31 @@ export default function ClientDetail() {
                     {client.status}
                   </span>
                 </div>
-                <p className="text-xl text-slate-400">{client.tagline}</p>
+                <p className="text-xl text-zinc-400">{client.tagline}</p>
               </div>
             </div>
 
-            <p className="text-lg text-slate-300 leading-relaxed mb-8">{client.description}</p>
+            <p className="text-lg text-zinc-300 leading-relaxed mb-8">{client.description}</p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                <Shield className="w-6 h-6 text-indigo-400" />
+              <div className="flex items-center gap-3 p-4 bg-zinc-950/50 rounded-xl border border-zinc-800">
+                <Shield className="w-6 h-6 text-yellow-400" />
                 <div>
-                  <p className="text-xs text-slate-500">Status</p>
+                  <p className="text-xs text-zinc-500">Status</p>
                   <p className="font-semibold text-white">{client.status}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                <Zap className="w-6 h-6 text-indigo-400" />
+              <div className="flex items-center gap-3 p-4 bg-zinc-950/50 rounded-xl border border-zinc-800">
+                <Zap className="w-6 h-6 text-yellow-400" />
                 <div>
-                  <p className="text-xs text-slate-500">Version</p>
+                  <p className="text-xs text-zinc-500">Version</p>
                   <p className="font-semibold text-white">{client.version}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                <Settings className="w-6 h-6 text-indigo-400" />
+              <div className="flex items-center gap-3 p-4 bg-zinc-950/50 rounded-xl border border-zinc-800">
+                <Settings className="w-6 h-6 text-yellow-400" />
                 <div>
-                  <p className="text-xs text-slate-500">Type</p>
+                  <p className="text-xs text-zinc-500">Type</p>
                   <p className="font-semibold text-white">Minecraft Client</p>
                 </div>
               </div>
@@ -124,13 +155,14 @@ export default function ClientDetail() {
             {client.fileData ? (
               <button
                 onClick={handleDownload}
-                className="flex items-center justify-center gap-2 w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-indigo-500/25 transition-all hover:scale-[1.02]"
+                className="group flex items-center justify-center gap-2 w-full py-4 bg-yellow-400 text-black rounded-xl font-bold text-lg hover:bg-yellow-300 transition-all duration-300 hover:scale-[1.02] glow-yellow"
               >
                 <Download className="w-6 h-6" />
                 Download {client.fileName || client.name}
+                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             ) : (
-              <div className="flex items-center justify-center gap-2 w-full py-4 bg-white/5 text-slate-500 rounded-xl font-bold text-lg border border-white/10">
+              <div className="flex items-center justify-center gap-2 w-full py-4 bg-zinc-800 text-zinc-500 rounded-xl font-bold text-lg border border-zinc-700">
                 <Download className="w-6 h-6" />
                 Download Coming Soon
               </div>
