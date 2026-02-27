@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Lock, Upload, Trash2, Plus, Download, Eye, EyeOff, Sparkles, FileUp, X } from 'lucide-react'
+import { Lock, Upload, Trash2, Plus, Download, Eye, EyeOff, Sparkles, FileUp, X, Shield } from 'lucide-react'
 
 interface Client {
   id: string
@@ -16,6 +16,9 @@ interface Client {
   fileSize?: number
 }
 
+// Your IP address - only you can access admin
+const ALLOWED_IPS = ['127.0.0.1', '::1'] // Add your actual IP here
+
 export default function Admin() {
   const navigate = useNavigate()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -23,6 +26,8 @@ export default function Admin() {
   const [showPassword, setShowPassword] = useState(false)
   const [clients, setClients] = useState<Client[]>([])
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [userIP, setUserIP] = useState<string>('')
+  const [isAuthorizedIP, setIsAuthorizedIP] = useState(false)
   const [newClient, setNewClient] = useState({
     name: '',
     tagline: '',
@@ -30,6 +35,23 @@ export default function Admin() {
     version: '',
     status: 'Available',
   })
+
+  // Check IP on load
+  useEffect(() => {
+    const checkIP = async () => {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json')
+        const data = await response.json()
+        setUserIP(data.ip)
+        // For now, allow all IPs but log them. Replace with your actual IP check
+        setIsAuthorizedIP(true) // Change this to: setIsAuthorizedIP(ALLOWED_IPS.includes(data.ip))
+      } catch (e) {
+        console.error('Could not get IP')
+        setIsAuthorizedIP(true) // Fallback - remove in production
+      }
+    }
+    checkIP()
+  }, [])
 
   useEffect(() => {
     const savedClients = localStorage.getItem('axora_clients')
@@ -40,8 +62,10 @@ export default function Admin() {
 
   const handleLogin = () => {
     const correctPassword = atob('UEBya2VyRDN2aXNzZXIyMDEx')
-    if (password === correctPassword) {
+    if (password === correctPassword && isAuthorizedIP) {
       setIsAuthenticated(true)
+    } else if (!isAuthorizedIP) {
+      alert('Access denied: Unauthorized IP address')
     } else {
       alert('Wrong password')
       setPassword('')
@@ -125,7 +149,7 @@ export default function Admin() {
             <Lock className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-center mb-2 text-white">Admin Access</h1>
-          <p className="text-slate-400 text-center mb-6 text-sm">Enter password to manage clients</p>
+          <p className="text-slate-400 text-center mb-6 text-sm">Restricted Area - IP: {userIP || 'Loading...'}</p>
           
           <div className="relative">
             <input
@@ -146,10 +170,14 @@ export default function Admin() {
           
           <button
             onClick={handleLogin}
-            className="w-full mt-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all"
+            className="w-full mt-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2"
           >
-            Unlock
+            <Shield className="w-5 h-5" /> Unlock
           </button>
+          
+          <p className="text-xs text-slate-600 text-center mt-4">
+            This page is hidden from the main site. Direct access only.
+          </p>
         </div>
       </div>
     )
@@ -166,6 +194,7 @@ export default function Admin() {
             </div>
             <span className="text-slate-600">/</span>
             <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
+            <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded border border-green-500/30">IP: {userIP}</span>
           </div>
           <button onClick={() => navigate('/')} className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors text-sm">
             Back to Site
