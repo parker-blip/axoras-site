@@ -1,0 +1,357 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
+export function Home() {
+  const [scrollY, setScrollY] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [visibleElements, setVisibleElements] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 500);
+
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setVisibleElements(prev => new Set(prev).add(entry.target.id));
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    ['clients', 'features'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', handleScroll);
+      observer.disconnect();
+    };
+  }, []);
+
+  const [clients, setClients] = useState<any[]>([]);
+
+  // Load clients from localStorage
+  useEffect(() => {
+    const loadClients = () => {
+      const savedClients = localStorage.getItem('axora_clients');
+      if (savedClients) {
+        setClients(JSON.parse(savedClients));
+      } else {
+        setClients([]);
+      }
+    };
+
+    loadClients();
+
+    // Listen for storage changes
+    const handleStorageChange = () => loadClients();
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('clientsUpdated', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('clientsUpdated', handleStorageChange);
+    };
+  }, []);
+
+  const features = [
+    {
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
+      title: "Direct Browser Downloads",
+      description: "No Discord requirement. Grab builds straight from the site in seconds."
+    },
+    {
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+      title: "Rapid Release Cycles",
+      description: "Frequent updates, clear changelogs, and consistent build quality."
+    },
+    {
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 12h18M3 17h18" /></svg>,
+      title: "Module Management",
+      description: "Centralized module hub with versioning, categories, and quick downloads."
+    },
+    {
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>,
+      title: "Verified Builds",
+      description: "Signed and curated releases to keep your toolkit consistent."
+    }
+  ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-slate-300 dark:border-slate-700 border-t-blue-500 dark:border-t-blue-400 rounded-full animate-spin mx-auto mb-4" />
+          <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">axora</div>
+        </div>
+      </div>
+    );
+  }
+
+  const AnimatedBackground = () => (
+    <div className="fixed inset-0 -z-10 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-500" />
+      <div
+        className="absolute -top-10 -left-10 w-96 h-96 bg-blue-500/20 dark:bg-blue-400/10 rounded-full blur-3xl animate-pulse"
+        style={{ transform: `translateY(${scrollY * 0.5}px)` }}
+      />
+      <div
+        className="absolute top-1/3 -right-10 w-96 h-96 bg-violet-500/20 dark:bg-violet-400/10 rounded-full blur-3xl animate-pulse"
+        style={{ animationDelay: '2s', transform: `translateY(${scrollY * 0.3}px)` }}
+      />
+      <div
+        className="absolute bottom-0 left-1/3 w-96 h-96 bg-amber-500/20 dark:bg-amber-400/10 rounded-full blur-3xl animate-pulse"
+        style={{ animationDelay: '4s', transform: `translateY(${scrollY * 0.7}px)` }}
+      />
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-500 relative">
+      <AnimatedBackground />
+
+      {/* Navigation */}
+      <nav className="relative z-50 sticky top-0 backdrop-blur-xl bg-white/50 dark:bg-slate-900/30 border-b border-slate-200/50 dark:border-slate-800/50 transition-colors">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link to="/" className="text-xl font-bold tracking-tighter">
+              <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">axora</span>
+            </Link>
+            <div className="flex items-center space-x-4">
+              <a
+                href="https://discord.gg/axoras"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:inline-flex items-center space-x-2 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all transform hover:scale-105"
+              >
+                <span className="text-sm font-medium">Join Discord</span>
+              </a>
+              <Link
+                to="/admin"
+                className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-sm font-medium"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4a4 4 0 00-4 4v2H6a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2v-6a2 2 0 00-2-2h-2V8a4 4 0 00-4-4zm-2 6V8a2 2 0 114 0v2h-4z" /></svg>
+                <span>Admin</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative py-24 lg:py-32">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto">
+            <div
+              className="mb-6 inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+              style={{ animation: 'fadeInUp 0.6s ease-out 0.2s both' }}
+            >
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-sm font-medium">Direct downloads. No Discord required.</span>
+            </div>
+            <h1
+              className="text-5xl lg:text-6xl font-bold tracking-tight mb-6"
+              style={{ animation: 'fadeInUp 0.6s ease-out 0.4s both' }}
+            >
+              Modern <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent animate-gradient">Minecraft</span> Hack Clients
+            </h1>
+            <p
+              className="text-xl text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto"
+              style={{ animation: 'fadeInUp 0.6s ease-out 0.6s both' }}
+            >
+              Axora delivers a sleek download hub for competitive Minecraft clients, builds, and modules.
+            </p>
+            <div
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+              style={{ animation: 'fadeInUp 0.6s ease-out 0.8s both' }}
+            >
+              <a
+                href="#clients"
+                className="inline-flex items-center space-x-2 px-6 py-3 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold hover:bg-slate-800 dark:hover:bg-slate-200 transition-all transform hover:scale-105 hover:shadow-xl group"
+              >
+                <span>Explore Clients</span>
+                <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </a>
+              <a
+                href="https://discord.gg/axoras"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-2 px-6 py-3 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all transform hover:scale-105 group"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                <span>Join Community</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Clients Section */}
+      <section id="clients" className="py-20 lg:py-24">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className={`text-center mb-16 transition-all duration-700 ${visibleElements.has('clients') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight mb-4">Our Clients</h2>
+            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+              Premium Minecraft hack clients and addons built for performance, customization, and competitive edge.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {clients.length === 0 ? (
+              <div className="col-span-full text-center py-16">
+                <div className="text-6xl mb-4">📦</div>
+                <h3 className="text-xl font-semibold mb-2">No clients uploaded yet</h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-6">
+                  Head to the admin portal to upload your first client
+                </p>
+                <Link
+                  to="/admin"
+                  className="inline-flex items-center space-x-2 px-6 py-3 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold hover:bg-slate-800 dark:hover:bg-slate-200 transition-all transform hover:scale-105"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4a4 4 0 00-4 4v2H6a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2v-6a2 2 0 00-2-2h-2V8a4 4 0 00-4-4zm-2 6V8a2 2 0 114 0v2h-4z" /></svg>
+                  <span>Go to Admin Portal</span>
+                </Link>
+              </div>
+            ) : (
+              clients.map((client, index) => {
+                const gradients = [
+                  'from-blue-500 to-blue-400',
+                  'from-violet-500 to-violet-400',
+                  'from-amber-500 to-amber-400',
+                  'from-emerald-500 to-emerald-400',
+                  'from-rose-500 to-rose-400',
+                  'from-cyan-500 to-cyan-400',
+                ];
+                const accent = gradients[index % gradients.length];
+                
+                return (
+                  <div
+                    key={client.id || index}
+                    className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/40 backdrop-blur-sm hover:shadow-xl transition-all duration-300"
+                    style={{
+                      animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both, float 3s ease-in-out infinite ${index * 0.5}s`,
+                      transform: hoveredCard === index ? 'translateY(-8px) rotateX(5deg)' : 'none',
+                      transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                      opacity: visibleElements.has('clients') ? 1 : 0,
+                    }}
+                    onMouseEnter={() => setHoveredCard(index)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                  >
+                    <div className={`h-1 bg-gradient-to-r ${accent} opacity-0 group-hover:opacity-100 transition-opacity`} />
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="text-xl font-bold mb-1 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                            {client.name}
+                          </h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">{client.version || 'Latest'}</p>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 group-hover:scale-110 transition-all">
+                          Available
+                        </span>
+                      </div>
+                      <p className="text-slate-600 dark:text-slate-300 mb-6 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors line-clamp-3">
+                        {client.description}
+                      </p>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (client.fileUrl) {
+                            const link = document.createElement('a');
+                            link.href = client.fileUrl;
+                            link.download = client.fileName || `${client.name}.jar`;
+                            link.click();
+                          }
+                        }}
+                        className="w-full py-2.5 rounded-lg font-semibold bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 hover:scale-105 hover:shadow-lg transition-all transform"
+                      >
+                        Download Now
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-20 lg:py-24 bg-slate-50/50 dark:bg-slate-900/20">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className={`text-center mb-16 transition-all duration-700 ${visibleElements.has('features') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight mb-4">Why Choose Axora</h2>
+            <p className="text-lg text-slate-600 dark:text-slate-400">Built different. Built better.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className={`flex items-start space-x-4 p-6 rounded-2xl bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 hover:shadow-lg transition-all duration-300 group ${
+                  visibleElements.has('features') ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+                }`}
+                style={{
+                  transitionDelay: `${index * 0.1}s`,
+                }}
+              >
+                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100 group-hover:scale-110 group-hover:bg-gradient-to-r group-hover:from-blue-500 group-hover:to-violet-500 group-hover:text-white transition-all">
+                  <div className="transition-transform group-hover:rotate-6 group-hover:scale-110">
+                    {feature.icon}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    {feature.title}
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-400 transition-colors group-hover:text-slate-700 dark:group-hover:text-slate-300">
+                    {feature.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200/50 dark:border-slate-800/50 py-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center">
+            <div className="mb-4 text-xl font-bold tracking-tighter">
+              <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">axora</span>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Modern Minecraft hack clients with direct browser downloads.</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500">© 2025 Axora. Built for performance.</p>
+          </div>
+        </div>
+      </footer>
+
+      {/* Custom animations */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradientCycle 3s ease infinite;
+        }
+        @keyframes gradientCycle {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}} />
+    </div>
+  );
+}

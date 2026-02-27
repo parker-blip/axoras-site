@@ -1,0 +1,358 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
+// Obfuscated password validation
+const validateAccess = (input: string): boolean => {
+  // Multiple layers of obfuscation
+  const h1 = btoa('P@rkerD3visser2011');
+  const h2 = btoa(h1);
+  const h3 = btoa(h2);
+  
+  // XOR encryption layer
+  const xorKey = 42;
+  const encrypted = 'P@rkerD3visser2011'.split('').map(c => 
+    String.fromCharCode(c.charCodeAt(0) ^ xorKey)
+  ).join('');
+  
+  const decrypted = encrypted.split('').map(c => 
+    String.fromCharCode(c.charCodeAt(0) ^ xorKey)
+  ).join('');
+  
+  // Hash comparison
+  const inputHash = btoa(btoa(btoa(input)));
+  
+  return input === decrypted && inputHash === h3;
+};
+
+interface ModuleItem {
+  id: string;
+  name: string;
+  version: string;
+  category: string;
+  description: string;
+  fileName: string;
+  fileUrl?: string;
+  uploadedAt?: string;
+}
+
+export function Admin() {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [attempts, setAttempts] = useState(0);
+  const [locked, setLocked] = useState(false);
+  const [modules, setModules] = useState<ModuleItem[]>([]);
+  const [moduleName, setModuleName] = useState('');
+  const [moduleVersion, setModuleVersion] = useState('');
+  const [moduleCategory, setModuleCategory] = useState('');
+  const [moduleDescription, setModuleDescription] = useState('');
+  const [moduleFile, setModuleFile] = useState<File | null>(null);
+
+  // Load existing clients on mount
+  useEffect(() => {
+    if (authenticated) {
+      const savedClients = localStorage.getItem('axora_clients');
+      if (savedClients) {
+        setModules(JSON.parse(savedClients));
+      }
+    }
+  }, [authenticated]);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (locked) {
+      alert('Too many failed attempts. Please try again later.');
+      return;
+    }
+
+    if (validateAccess(password)) {
+      setAuthenticated(true);
+      setAttempts(0);
+    } else {
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      
+      if (newAttempts >= 5) {
+        setLocked(true);
+        setTimeout(() => {
+          setLocked(false);
+          setAttempts(0);
+        }, 60000); // Lock for 1 minute
+      }
+      
+      alert(`Invalid password. ${5 - newAttempts} attempts remaining.`);
+      setPassword('');
+    }
+  };
+
+  const handleModuleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!moduleName || !moduleVersion) return;
+
+    // Create file URL if file is uploaded
+    const fileUrl = moduleFile ? URL.createObjectURL(moduleFile) : '';
+    
+    const newClient = {
+      id: Date.now().toString(),
+      name: moduleName,
+      version: moduleVersion,
+      category: moduleCategory || 'General',
+      description: moduleDescription || 'Custom client module',
+      fileName: moduleFile?.name || `${moduleName}.jar`,
+      fileUrl,
+      uploadedAt: new Date().toISOString()
+    };
+
+    // Load existing clients from localStorage
+    const existingClients = localStorage.getItem('axora_clients');
+    const clients = existingClients ? JSON.parse(existingClients) : [];
+    
+    // Add new client
+    const updatedClients = [newClient, ...clients];
+    
+    // Save to localStorage
+    localStorage.setItem('axora_clients', JSON.stringify(updatedClients));
+    
+    // Trigger custom event to update home page
+    window.dispatchEvent(new Event('clientsUpdated'));
+    
+    // Update local state
+    setModules(updatedClients);
+    
+    // Reset form
+    setModuleName('');
+    setModuleVersion('');
+    setModuleCategory('');
+    setModuleDescription('');
+    setModuleFile(null);
+    
+    alert('Client uploaded successfully!');
+  };
+
+  const handleDelete = (id: string) => {
+    if (!confirm('Are you sure you want to delete this client?')) return;
+    
+    const existingClients = localStorage.getItem('axora_clients');
+    const clients = existingClients ? JSON.parse(existingClients) : [];
+    
+    const updatedClients = clients.filter((c: any) => c.id !== id);
+    
+    localStorage.setItem('axora_clients', JSON.stringify(updatedClients));
+    window.dispatchEvent(new Event('clientsUpdated'));
+    setModules(updatedClients);
+    
+    alert('Client deleted successfully!');
+  };
+
+  const handleDownload = (client: any) => {
+    if (client.fileUrl) {
+      const link = document.createElement('a');
+      link.href = client.fileUrl;
+      link.download = client.fileName;
+      link.click();
+    } else {
+      alert('No file attached to this client');
+    }
+  };
+
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-6">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-900 dark:bg-slate-100 mb-4">
+              <svg className="w-8 h-8 text-white dark:text-slate-900" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 4a4 4 0 00-4 4v2H6a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2v-6a2 2 0 00-2-2h-2V8a4 4 0 00-4-4zm-2 6V8a2 2 0 114 0v2h-4z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-bold mb-2">Admin Portal</h1>
+            <p className="text-slate-600 dark:text-slate-400">Restricted access - authentication required</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/40 backdrop-blur-sm p-8">
+            <label className="block mb-6">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">Access Code</span>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                disabled={locked}
+                className="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              />
+            </label>
+            
+            <button
+              type="submit"
+              disabled={locked}
+              className="w-full px-6 py-3 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold hover:bg-slate-800 dark:hover:bg-slate-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {locked ? 'Locked - Try Again Later' : 'Authenticate'}
+            </button>
+            
+            <Link to="/" className="block text-center mt-6 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
+              ← Back to Home
+            </Link>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/50 dark:bg-slate-900/30 border-b border-slate-200/50 dark:border-slate-800/50">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link to="/" className="text-xl font-bold tracking-tighter">
+              <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">axora</span>
+              <span className="ml-2 text-sm font-normal text-slate-500">/ admin</span>
+            </Link>
+            <button
+              onClick={() => setAuthenticated(false)}
+              className="inline-flex items-center space-x-2 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-sm font-medium"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-6 py-16 lg:py-24">
+        <div className="mb-12">
+          <h1 className="text-4xl font-bold mb-4">Module Management</h1>
+          <p className="text-lg text-slate-600 dark:text-slate-400">
+            Upload and manage custom modules for direct browser downloads.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          {/* Upload Form */}
+          <form
+            onSubmit={handleModuleSubmit}
+            className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/40 backdrop-blur-sm p-8 space-y-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-semibold">Upload Module</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Attach files and publish them to the download list.</p>
+              </div>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-500">No Discord required</span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                Module Name *
+                <input
+                  value={moduleName}
+                  onChange={(e) => setModuleName(e.target.value)}
+                  placeholder="Module name"
+                  className="mt-2 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/60 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </label>
+              <label className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                Version *
+                <input
+                  value={moduleVersion}
+                  onChange={(e) => setModuleVersion(e.target.value)}
+                  placeholder="v1.0.0"
+                  className="mt-2 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/60 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </label>
+              <label className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                Category
+                <input
+                  value={moduleCategory}
+                  onChange={(e) => setModuleCategory(e.target.value)}
+                  placeholder="Combat, Utility, Visuals"
+                  className="mt-2 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/60 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </label>
+              <label className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                File Upload
+                <input
+                  type="file"
+                  onChange={(e) => setModuleFile(e.target.files?.[0] || null)}
+                  className="mt-2 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/60 px-3 py-2 text-sm file:mr-3 file:border-0 file:bg-slate-900 file:text-white file:px-3 file:py-2 file:rounded-md dark:file:bg-slate-100 dark:file:text-slate-900"
+                />
+              </label>
+            </div>
+            
+            <label className="text-sm font-medium text-slate-600 dark:text-slate-300">
+              Description
+              <textarea
+                value={moduleDescription}
+                onChange={(e) => setModuleDescription(e.target.value)}
+                placeholder="Short description for the module"
+                className="mt-2 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/60 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={4}
+              />
+            </label>
+            
+            <button
+              type="submit"
+              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold hover:bg-slate-800 dark:hover:bg-slate-200 transition-all transform hover:scale-105"
+            >
+              <span>Upload Module</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" /></svg>
+            </button>
+          </form>
+
+          {/* Modules List */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/40 backdrop-blur-sm p-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-semibold">Published Modules</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Manage published builds and downloads.</p>
+              </div>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-500">Browser-ready</span>
+            </div>
+            
+            {modules.length === 0 ? (
+              <div className="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-10 text-center text-slate-500 dark:text-slate-400">
+                No modules uploaded yet. Use the form to add your first build.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {modules.map((module, index) => (
+                  <div key={`${module.name}-${index}`} className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold">{module.name}</h4>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300">{module.version}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                          Live
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{module.description}</p>
+                      <div className="text-xs text-slate-400 dark:text-slate-500 mt-2">{module.category} • {module.fileName}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleDelete(module.id)}
+                        className="px-3 py-2 rounded-lg border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => handleDownload(module)}
+                        className="px-3 py-2 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-sm font-semibold hover:bg-slate-800 dark:hover:bg-slate-200 transition-all"
+                      >
+                        Download
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
