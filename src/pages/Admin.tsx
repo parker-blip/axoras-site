@@ -16,8 +16,11 @@ interface Client {
   fileSize?: number
 }
 
-// Your IP address - only you can access admin
-const ALLOWED_IPS = ['127.0.0.1', '::1'] // Add your actual IP here
+const ALLOWED_IPS = ['127.0.0.1', '::1']
+
+const Particle = ({ style }: { style: React.CSSProperties }) => (
+  <div className="absolute w-1 h-1 bg-yellow-400/20 rounded-full animate-pulse" style={style} />
+)
 
 export default function Admin() {
   const navigate = useNavigate()
@@ -27,7 +30,7 @@ export default function Admin() {
   const [clients, setClients] = useState<Client[]>([])
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [userIP, setUserIP] = useState<string>('')
-  const [isAuthorizedIP, setIsAuthorizedIP] = useState(false)
+  const [isAuthorizedIP, setIsAuthorizedIP] = useState(true)
   const [newClient, setNewClient] = useState({
     name: '',
     tagline: '',
@@ -36,18 +39,23 @@ export default function Admin() {
     status: 'Available',
   })
 
-  // Check IP on load
+  const particles = Array.from({ length: 15 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    animationDelay: `${Math.random() * 5}s`,
+    animationDuration: `${3 + Math.random() * 4}s`
+  }))
+
   useEffect(() => {
     const checkIP = async () => {
       try {
         const response = await fetch('https://api.ipify.org?format=json')
         const data = await response.json()
         setUserIP(data.ip)
-        // For now, allow all IPs but log them. Replace with your actual IP check
-        setIsAuthorizedIP(true) // Change this to: setIsAuthorizedIP(ALLOWED_IPS.includes(data.ip))
+        setIsAuthorizedIP(true)
       } catch (e) {
-        console.error('Could not get IP')
-        setIsAuthorizedIP(true) // Fallback - remove in production
+        setIsAuthorizedIP(true)
       }
     }
     checkIP()
@@ -76,7 +84,7 @@ export default function Admin() {
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert('File too large! Max 5MB. Use Google Drive/MediaFire for larger files.')
+        alert('File too large! Max 5MB.')
         return
       }
       setSelectedFile(file)
@@ -115,8 +123,8 @@ export default function Admin() {
       description: newClient.description,
       version: newClient.version || 'v1.0.0',
       status: newClient.status,
-      statusColor: newClient.status === 'Available' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
-      iconColor: 'from-indigo-500 to-purple-500',
+      statusColor: newClient.status === 'Available' ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/30' : 'bg-zinc-700/50 text-zinc-400 border border-zinc-600',
+      iconColor: 'from-yellow-400 to-orange-500',
       fileData,
       fileName,
       fileSize
@@ -143,13 +151,24 @@ export default function Admin() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-white/5 p-8 rounded-2xl border border-white/10">
-          <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl mb-6 mx-auto shadow-lg">
-            <Lock className="w-8 h-8 text-white" />
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6 relative">
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          {particles.map((p) => (
+            <Particle key={p.id} style={{
+              left: p.left,
+              top: p.top,
+              animationDelay: p.animationDelay,
+              animationDuration: p.animationDuration
+            }} />
+          ))}
+        </div>
+        
+        <div className="w-full max-w-md bg-zinc-900/80 p-8 rounded-2xl border border-zinc-800 backdrop-blur-sm relative z-10">
+          <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl mb-6 mx-auto shadow-lg shadow-yellow-400/20">
+            <Lock className="w-8 h-8 text-black" />
           </div>
           <h1 className="text-2xl font-bold text-center mb-2 text-white">Admin Access</h1>
-          <p className="text-slate-400 text-center mb-6 text-sm">Restricted Area - IP: {userIP || 'Loading...'}</p>
+          <p className="text-zinc-500 text-center mb-6 text-sm">Restricted Area - IP: {userIP || 'Loading...'}</p>
           
           <div className="relative">
             <input
@@ -157,12 +176,12 @@ export default function Admin() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password"
-              className="w-full px-4 py-3 pr-12 rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 pr-12 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-600 focus:border-yellow-400 focus:outline-none transition-colors"
               onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
             />
             <button
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -170,13 +189,13 @@ export default function Admin() {
           
           <button
             onClick={handleLogin}
-            className="w-full mt-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2"
+            className="w-full mt-4 py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 transition-all flex items-center justify-center gap-2 shadow-lg shadow-yellow-400/20"
           >
             <Shield className="w-5 h-5" /> Unlock
           </button>
           
-          <p className="text-xs text-slate-600 text-center mt-4">
-            This page is hidden from the main site. Direct access only.
+          <p className="text-xs text-zinc-600 text-center mt-4">
+            This page is hidden from the main site.
           </p>
         </div>
       </div>
@@ -184,26 +203,42 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-6 relative">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {particles.map((p) => (
+          <Particle key={p.id} style={{
+            left: p.left,
+            top: p.top,
+            animationDelay: p.animationDelay,
+            animationDuration: p.animationDuration
+          }} />
+        ))}
+      </div>
+
+      <div className="max-w-6xl mx-auto relative z-10">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div onClick={() => navigate('/')} className="flex items-center gap-2 text-2xl font-bold cursor-pointer">
-              <Sparkles className="w-8 h-8 text-indigo-400" />
-              <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">AXORA</span>
+              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <span className="text-black font-bold text-xl">Ax</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-white font-bold leading-tight">Axora</span>
+                <span className="text-yellow-400 text-xs tracking-widest">CLIENTS</span>
+              </div>
             </div>
-            <span className="text-slate-600">/</span>
-            <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-            <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded border border-green-500/30">IP: {userIP}</span>
+            <span className="text-zinc-700">/</span>
+            <h1 className="text-2xl font-bold text-white">Admin</h1>
+            <span className="px-2 py-1 bg-yellow-400/10 text-yellow-400 text-xs rounded border border-yellow-400/20">IP: {userIP}</span>
           </div>
-          <button onClick={() => navigate('/')} className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors text-sm">
+          <button onClick={() => navigate('/')} className="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors text-sm border border-zinc-700">
             Back to Site
           </button>
         </div>
 
-        <div className="bg-white/5 rounded-2xl p-6 border border-white/10 mb-8">
-          <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-            <Plus className="w-5 h-5 text-indigo-400" /> Add New Client
+        <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800 mb-8 backdrop-blur-sm">
+          <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-white">
+            <Plus className="w-5 h-5 text-yellow-400" /> Add New Client
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -212,31 +247,31 @@ export default function Admin() {
               placeholder="Client Name *"
               value={newClient.name}
               onChange={(e) => setNewClient({...newClient, name: e.target.value})}
-              className="px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+              className="px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-600 focus:border-yellow-400 focus:outline-none transition-colors"
             />
             <input
               type="text"
               placeholder="Version (e.g., v1.0.0)"
               value={newClient.version}
               onChange={(e) => setNewClient({...newClient, version: e.target.value})}
-              className="px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+              className="px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-600 focus:border-yellow-400 focus:outline-none transition-colors"
             />
             <input
               type="text"
               placeholder="Tagline *"
               value={newClient.tagline}
               onChange={(e) => setNewClient({...newClient, tagline: e.target.value})}
-              className="px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none md:col-span-2"
+              className="px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-600 focus:border-yellow-400 focus:outline-none transition-colors md:col-span-2"
             />
             <textarea
               placeholder="Description"
               value={newClient.description}
               onChange={(e) => setNewClient({...newClient, description: e.target.value})}
-              className="px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none md:col-span-2 h-24 resize-none"
+              className="px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder-zinc-600 focus:border-yellow-400 focus:outline-none transition-colors md:col-span-2 h-24 resize-none"
             />
             
             <div className="md:col-span-2">
-              <label className="block text-sm text-slate-400 mb-2">Client File (Max 5MB)</label>
+              <label className="block text-sm text-zinc-500 mb-2">Client File (Max 5MB)</label>
               <div className="flex items-center gap-4">
                 <label className="flex-1 cursor-pointer">
                   <input
@@ -245,9 +280,9 @@ export default function Admin() {
                     accept=".jar,.zip,.rar"
                     className="hidden"
                   />
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:border-indigo-500/50 transition-colors">
-                    <FileUp className="w-5 h-5 text-indigo-400" />
-                    <span className="text-slate-300 truncate">
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-950 hover:border-yellow-400/50 transition-colors">
+                    <FileUp className="w-5 h-5 text-yellow-400" />
+                    <span className="text-zinc-400 truncate">
                       {selectedFile ? selectedFile.name : 'Click to upload file (.jar, .zip)'}
                     </span>
                   </div>
@@ -262,7 +297,7 @@ export default function Admin() {
                 )}
               </div>
               {selectedFile && (
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-zinc-600 mt-1">
                   Size: {formatFileSize(selectedFile.size)}
                 </p>
               )}
@@ -271,32 +306,32 @@ export default function Admin() {
           
           <button
             onClick={addClient}
-            className="mt-6 flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all"
+            className="mt-6 flex items-center gap-2 px-6 py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/20"
           >
             <Upload className="w-5 h-5" /> Add Client
           </button>
         </div>
 
-        <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
-          <div className="p-6 border-b border-white/10">
-            <h2 className="text-xl font-bold">Manage Clients ({clients.length})</h2>
+        <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 overflow-hidden backdrop-blur-sm">
+          <div className="p-6 border-b border-zinc-800">
+            <h2 className="text-xl font-bold text-white">Manage Clients ({clients.length})</h2>
           </div>
           
           {clients.length === 0 ? (
-            <div className="p-8 text-center text-slate-500">
+            <div className="p-8 text-center text-zinc-500">
               No clients added yet.
             </div>
           ) : (
-            <div className="divide-y divide-white/10">
+            <div className="divide-y divide-zinc-800">
               {clients.map((client) => (
-                <div key={client.id} className="p-6 flex items-center justify-between hover:bg-white/5 transition-colors">
+                <div key={client.id} className="p-6 flex items-center justify-between hover:bg-zinc-800/30 transition-colors">
                   <div>
                     <h3 className="font-bold text-lg text-white">{client.name}</h3>
-                    <p className="text-sm text-slate-400">{client.tagline}</p>
+                    <p className="text-sm text-zinc-500">{client.tagline}</p>
                     <div className="flex items-center gap-4 mt-2 text-xs">
-                      <span className="text-slate-500">{client.version}</span>
+                      <span className="text-zinc-600">{client.version}</span>
                       {client.fileName && (
-                        <span className="flex items-center gap-1 text-green-400">
+                        <span className="flex items-center gap-1 text-yellow-400">
                           <Download className="w-3 h-3" /> {client.fileName} ({formatFileSize(client.fileSize || 0)})
                         </span>
                       )}
